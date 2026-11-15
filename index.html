@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Flappy Bird</title>
+<style>
+:root{--bg:#e9e7df;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17171c}}
+:root[data-theme="dark"]{--bg:#17171c}
+html,body{height:100%;margin:0}
+body{background:var(--bg);display:flex;align-items:center;justify-content:center;touch-action:none;user-select:none;-webkit-user-select:none;overflow:hidden}
+canvas{height:100%;max-width:100%;aspect-ratio:400/640;display:block}
+</style>
+</head>
+<body>
+<canvas id="c" width="800" height="1280"></canvas>
+<script>
+const cv=document.getElementById('c'),ctx=cv.getContext('2d');ctx.scale(2,2);
+const W=400,H=640,GH=100,GY=H-GH,GRAV=.45,FLAP=-7.5,MAXF=11,PS=2.5,PW=70,GAP=150,SP=210;
+let bird,pipes,state,score,dead,frame=0,gx=0,best=0;
+try{best=+localStorage.getItem('fb_best')||0}catch(e){}
+function reset(){bird={x:100,y:280,vy:0};pipes=[];score=0;dead=0;state='ready'}
+function flap(){if(state==='ready'){state='play';bird.vy=FLAP}else if(state==='play')bird.vy=FLAP;else if(dead>40)reset()}
+addEventListener('pointerdown',e=>{e.preventDefault();flap()});
+addEventListener('keydown',e=>{if(['Space','ArrowUp','KeyW'].includes(e.code)&&!e.repeat){e.preventDefault();flap()}});
+const hit=(a,b)=>a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;
+function update(){
+  frame++;
+  if(state==='ready'){gx+=PS;bird.y=280+Math.sin(frame*.12)*8}
+  else if(state==='play'){
+    gx+=PS;bird.vy=Math.min(MAXF,bird.vy+GRAV);bird.y+=bird.vy;
+    if(bird.y<0){bird.y=0;bird.vy=0}
+    if(!pipes.length||pipes[pipes.length-1].x<W-SP)pipes.push({x:W,g:80+Math.random()*(GY-GAP-160),s:false});
+    const b={x:bird.x+4,y:bird.y+4,w:26,h:16};let crash=bird.y+24>=GY;
+    for(let i=pipes.length-1;i>=0;i--){const p=pipes[i];p.x-=PS;
+      if(p.x+PW<0){pipes.splice(i,1);continue}
+      if(!p.s&&p.x+PW<bird.x){p.s=true;score++}
+      if(hit(b,{x:p.x,y:0,w:PW,h:p.g})||hit(b,{x:p.x,y:p.g+GAP,w:PW,h:GY-p.g-GAP}))crash=true}
+    if(crash){state='dead';dead=0;if(score>best){best=score;try{localStorage.setItem('fb_best',best)}catch(e){}}}
+  }else{dead++;if(bird.y+24<GY){bird.vy=Math.min(MAXF,bird.vy+GRAV);bird.y=Math.min(GY-24,bird.y+bird.vy)}}
+}
+function txt(s,x,y,size,fill,al='center'){ctx.font='bold '+size+'px system-ui,sans-serif';ctx.textAlign=al;ctx.lineWidth=size/6;ctx.lineJoin='round';ctx.strokeStyle='#533847';ctx.strokeText(s,x,y);ctx.fillStyle=fill;ctx.fillText(s,x,y)}
+function pipe(x,y,h,top){
+  ctx.lineWidth=2;ctx.strokeStyle='#533847';
+  ctx.fillStyle='#73bf2e';ctx.fillRect(x+3,y,PW-6,h);ctx.fillStyle='#b0e964';ctx.fillRect(x+7,y,8,h);ctx.strokeRect(x+3,y,PW-6,h);
+  const cy=top?y+h-26:y;
+  ctx.fillStyle='#73bf2e';ctx.fillRect(x,cy,PW,26);ctx.fillStyle='#b0e964';ctx.fillRect(x+4,cy,8,26);ctx.strokeRect(x,cy,PW,26);
+}
+function drawBird(){
+  ctx.save();ctx.translate(bird.x+17,bird.y+12);ctx.rotate(Math.max(-.45,Math.min(1.4,bird.vy*.12)));
+  ctx.lineWidth=2;ctx.strokeStyle='#533847';
+  ctx.fillStyle='#f8d232';ctx.beginPath();ctx.ellipse(0,0,17,12,0,0,7);ctx.fill();ctx.stroke();
+  const ws=state==='dead'?0:[-3,0,3,0][(frame>>2)&3];
+  ctx.fillStyle='#fff5c8';ctx.beginPath();ctx.ellipse(-6,3+ws,8,5,0,0,7);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(9,-5,6,0,7);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#533847';ctx.beginPath();ctx.arc(11,-3,2,0,7);ctx.fill();
+  ctx.fillStyle='#f06428';ctx.beginPath();ctx.roundRect(5,1,14,8,4);ctx.fill();ctx.stroke();
+  ctx.restore();
+}
+function draw(){
+  ctx.fillStyle='#70c5ce';ctx.fillRect(0,0,W,GY);
+  ctx.fillStyle='rgba(255,255,255,.75)';
+  for(let i=0;i<4;i++){const cx=((i*170-frame*.3)%540+540)%540-70,cy=360+(i%2)*20;
+    ctx.beginPath();ctx.ellipse(cx+35,cy+15,35,15,0,0,7);ctx.ellipse(cx+50,cy+4,25,18,0,0,7);ctx.ellipse(cx+75,cy+15,30,15,0,0,7);ctx.fill()}
+  ctx.fillStyle='#a0decd';[60,90,50,110,70,95,55,80,100,65].forEach((h,i)=>ctx.fillRect(i*42,GY-h,36,h));
+  ctx.fillStyle='#8cd66c';for(let i=0;i<9;i++){ctx.beginPath();ctx.ellipse(i*50+21,GY,31,20,0,0,7);ctx.fill()}
+  pipes.forEach(p=>{pipe(p.x,0,p.g,true);pipe(p.x,p.g+GAP,GY-p.g-GAP,false)});
+  ctx.fillStyle='#ded895';ctx.fillRect(0,GY,W,GH);
+  ctx.fillStyle='#73bf2e';ctx.fillRect(0,GY,W,14);
+  ctx.fillStyle='#9be14b';const sh=gx%24;
+  for(let x=-24;x<W+24;x+=24){const sx=x-sh;ctx.beginPath();ctx.moveTo(sx,GY);ctx.lineTo(sx+12,GY);ctx.lineTo(sx+24,GY+14);ctx.lineTo(sx+12,GY+14);ctx.fill()}
+  ctx.fillStyle='#533847';ctx.fillRect(0,GY-2,W,3);ctx.fillStyle='#d5a850';ctx.fillRect(0,GY+14,W,5);
+  drawBird();
+  if(state==='ready'){txt('Get Ready!',W/2,150,40,'#fca048');txt('Prek ekranin për të fluturuar',W/2,400,18,'#fff');txt('Rekordi: '+best,W/2,440,16,'#fff')}
+  else if(state==='play')txt(score,W/2,100,56,'#fff');
+  else{
+    if(dead<8){ctx.fillStyle='rgba(255,255,255,'+(.8-dead*.1)+')';ctx.fillRect(0,0,W,H)}
+    if(dead>20){
+      txt('Game Over',W/2,150,42,'#fca048');
+      ctx.fillStyle='#ded895';ctx.beginPath();ctx.roundRect(60,190,280,150,14);ctx.fill();
+      ctx.strokeStyle='#533847';ctx.lineWidth=3;ctx.stroke();
+      ctx.font='bold 14px system-ui,sans-serif';ctx.textAlign='left';ctx.fillStyle='#dc7828';
+      ctx.fillText('MEDALJA',80,218);ctx.fillText('REZULTATI',230,218);ctx.fillText('REKORDI',230,278);
+      ctx.fillStyle='#a09664';ctx.beginPath();ctx.arc(115,265,33,0,7);ctx.fill();
+      const m=score>=40?'#e5e4e2':score>=30?'#ffc828':score>=20?'#c0c0c8':score>=10?'#cd7f32':null;
+      if(m){ctx.fillStyle=m;ctx.beginPath();ctx.arc(115,265,29,0,7);ctx.fill()}
+      ctx.stroke();ctx.beginPath();ctx.arc(115,265,33,0,7);ctx.stroke();
+      txt(score,230,252,30,'#fff','left');txt(best,230,312,30,'#fff','left');
+      if(dead>40)txt('Prek për të rifilluar',W/2,385,18,'#fff');
+    }
+  }
+}
+let last=performance.now(),acc=0;
+function loop(t){acc+=(t-last)/(1000/60);last=t;if(acc>5)acc=5;while(acc>=1){update();acc--}draw();requestAnimationFrame(loop)}
+reset();requestAnimationFrame(loop);
+</script>
+</body>
+</html>
