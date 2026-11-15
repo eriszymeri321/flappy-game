@@ -9,12 +9,14 @@
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17171c}}
 :root[data-theme="dark"]{--bg:#17171c}
 html,body{height:100%;margin:0}
-body{background:var(--bg);display:flex;align-items:center;justify-content:center;touch-action:none;user-select:none;-webkit-user-select:none;overflow:hidden}
-canvas{height:100%;max-width:100%;aspect-ratio:400/640;display:block}
+body{background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;touch-action:none;user-select:none;-webkit-user-select:none;overflow:hidden}
+canvas{height:calc(100% - 34px);max-width:100%;aspect-ratio:400/640;display:block;flex:none}
+footer{height:34px;flex:none;display:flex;align-items:center;justify-content:center;color:#776f61;font:600 12px system-ui,sans-serif;letter-spacing:.04em}
 </style>
 </head>
 <body>
 <canvas id="c" width="800" height="1280"></canvas>
+<footer>Created by Eris Zymeri</footer>
 <script>
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');ctx.scale(2,2);
 const W=400,H=640,GH=100,GY=H-GH,GRAV=.45,FLAP=-7.5,MAXF=11,PS=2.5,PW=70,GAP=150,SP=210;
