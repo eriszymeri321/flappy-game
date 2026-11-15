@@ -10,13 +10,11 @@
 :root[data-theme="dark"]{--bg:#17171c}
 html,body{height:100%;margin:0}
 body{background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;touch-action:none;user-select:none;-webkit-user-select:none;overflow:hidden}
-canvas{height:calc(100% - 34px);max-width:100%;aspect-ratio:400/640;display:block;flex:none}
-footer{height:34px;flex:none;display:flex;align-items:center;justify-content:center;color:#776f61;font:600 12px system-ui,sans-serif;letter-spacing:.04em}
+canvas{height:100%;max-width:100%;aspect-ratio:400/640;display:block}
 </style>
 </head>
 <body>
 <canvas id="c" width="800" height="1280"></canvas>
-<footer>Created by Eris Zymeri</footer>
 <script>
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');ctx.scale(2,2);
 const W=400,H=640,GH=100,GY=H-GH,GRAV=.45,FLAP=-7.5,MAXF=11,PS=2.5,PW=70,GAP=150,SP=210;
@@ -73,6 +71,7 @@ function draw(){
   ctx.fillStyle='#9be14b';const sh=gx%24;
   for(let x=-24;x<W+24;x+=24){const sx=x-sh;ctx.beginPath();ctx.moveTo(sx,GY);ctx.lineTo(sx+12,GY);ctx.lineTo(sx+24,GY+14);ctx.lineTo(sx+12,GY+14);ctx.fill()}
   ctx.fillStyle='#533847';ctx.fillRect(0,GY-2,W,3);ctx.fillStyle='#d5a850';ctx.fillRect(0,GY+14,W,5);
+  ctx.font='bold 12px system-ui,sans-serif';ctx.textAlign='center';ctx.fillStyle='#77613a';ctx.fillText('Created by Eris Zymeri',W/2,H-14);
   drawBird();
   if(state==='ready'){txt('Get Ready!',W/2,150,40,'#fca048');txt('Prek ekranin për të fluturuar',W/2,400,18,'#fff');txt('Rekordi: '+best,W/2,440,16,'#fff')}
   else if(state==='play')txt(score,W/2,100,56,'#fff');
